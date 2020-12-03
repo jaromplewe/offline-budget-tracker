@@ -1,5 +1,6 @@
 console.log('sw hit')
 const CACHE_NAME = 'budgetTracker-v1';
+const DATA_CACHE = 'dataCache-v1';
 
 const FILES_TO_CACHE = [
     '/',
@@ -45,6 +46,32 @@ self.addEventListener('activate', (event) => {
     )
 
     self.clients.claim();
+
+});
+
+self.addEventListener('fetch', (event) => {
+
+    if (event.request.url.includes('/api')) {
+        return event.respondWith(
+            caches
+                .open(DATA_CACHE)
+                .then(cache => {
+                    return fetch(event.request)
+                        .then(response => {
+                            if (response.status === 200) {
+                                cache.put(event.request.url, response.clone());
+                            }
+
+                            return response;
+                        })
+                        .catch(err => {
+                            cache.match(event.request);
+                        })
+                })
+                .catch(err => console.log('error fetching api: ', err))
+        );
+    }
+
 
 });
 
