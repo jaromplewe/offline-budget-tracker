@@ -25,5 +25,26 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
+self.addEventListener('activate', (event) => {
+    console.log('hit activation')
 
+    event.waitUntil(
+        caches
+            .keys()
+            .then(keyList => {
+                return Promise.all(
+                    keyList.map(key => {
+                        if (key !== CACHE_NAME && key !== DATA_CACHE) {
+                            console.group('deleting cache: ', key);
+                            return caches.delete(key);
+                        }
+                    })
+                )
+            })
+            .catch(err => console.log('activation error: ', err))
+    )
+
+    self.clients.claim();
+
+});
 
