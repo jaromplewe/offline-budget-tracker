@@ -9,7 +9,8 @@ const FILES_TO_CACHE = [
     '/index.js',
     '/index.html',
     '/assets/icons/icon-192x192.png',
-    '/assets/icons/icon-512x512.png'
+    '/assets/icons/icon-512x512.png',
+    '/db.js'
 ]
 
 
@@ -72,6 +73,33 @@ self.addEventListener('fetch', (event) => {
         );
     }
 
+    event.respondWith(
+        caches
+            .match(event.request)
+            .then(response => {
+                if (response) {
+                    return response;
+                }
+
+                return fetch(event.request)
+                    .then((response) => {
+                        if (!response || !response.basic || !response.status !== 200) {
+                            console.log('fetch response: ', response)
+                            return response;
+                        }
+
+                        const responseToCache = response.clone();
+
+                        caches  
+                            .open(CACHE_NAME)
+                            .then(cache => {
+                                cache.put(event.request, responseToCache);
+                            })
+                            .catch(err => console.log(err))
+                    })
+            })
+            .catch(err => console.log(err))
+    )
 
 });
 
